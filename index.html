@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Avnish-Weather </title>
+  <meta name="description" content="Weather demo with robust error handling and fallback" />
+  <style>
+    :root {
+      --bg-default: linear-gradient(to bottom, #0a2a43, #003366);
+      --card-bg: rgba(255, 255, 255, 0.06);
+      --maxw: 1100px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: #fff;
+      background: var(--bg-default);
+      background-size: cover;
+      background-position: center;
+      transition: background-image 500ms cubic-bezier(0.5,0.1,0.3,1);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding-bottom: 40px;
+      background-image: url( "image-default.jpg")
+    }
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 18px; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+    .brand { font-weight: 700; }
+    .controls { display: flex; gap: 8px; align-items: center; }
+    input[type="search"] {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(255, 255, 255, 0.13);
+      background: transparent;
+      color: inherit;
+      width: 220px;
+      outline: none;
+      transition: border 0.22s;
+    }
+    input[type="search"]:focus {
+      border: 2px solid var(--accent);
+      background: rgba(255,255,255,0.03);
+    }
+    button.btn, .cities button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s, box-shadow 0.15s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.11);
+    }
+    button.btn:hover, .cities button:hover {
+      background: #1f51b0;
+      color:white;
+    }
+    .cities {
+      margin-top: 14px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .cities button {
+      background: transparent;
+      border: 1.5px solid rgba(255, 255, 255, 0.14);
+      color: inherit;
+      font-size: 0.98rem;
+      font-weight: 500;
+      box-shadow: none;
+      transition: background 0.24s, color 0.23s;
+    }
+    .cities button:active {
+      background: var(--accent);
+      color: #12041e;
+      border: 1.5px solid #fff;
+    }
+    .status {
+      margin-top: 12px;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.93);
+      min-height: 23px;
+      letter-spacing: 0.01em;
+      transition: color .17s;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .status.loading::after {
+      content: '';
+      width: 17px; height: 17px; border-radius: 50%;
+      border: 2px solid #dbedff;
+      border-top: 2px solid #5b8cff;
+      animation: spin 0.85s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-top: 22px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 18px;
+      min-height: 160px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.09);
+      transition: background 0.24s;
+    }
+    .card img { width: 74px; height: 74px; object-fit: contain; margin-bottom: 8px; }
+    .big { font-size: 24px; font-weight: 700; }
+    .muted { color: rgba(255,255,255,0.74); font-size: 13px; margin-top: 6px; }
+    footer {
+      margin-top: 36px;
+      text-align: center;
+      color: rgba(255,255,255,0.73);
+      font-size: 14px;
+    }
+    @media (max-width: 480px) {
+      input[type="search"] { width: 140px; }
+      .card { min-height: 140px; padding: 14px; }
+      .brand { font-size: 1rem; }
+    }
+    .fade { animation: fade .6s; }
+    @keyframes fade { from{opacity:0;transform:translateY(24px);} to{opacity:1;transform:translateY(0);} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">Avi-Weather</div>
+      <div class="controls" role="search">
+        <input id="cityInput" type="search" placeholder="e.g. Delhi" aria-label="City name" autocomplete="off" spellcheck="false" />
+        <button id="searchBtn" class="btn" type="button">Search</button>
+      </div>
+    </header>
+    <div class="cities" aria-label="Quick cities">
+      <button class="cityBtn" data-city="Delhi">Delhi</button>
+      <button class="cityBtn" data-city="Mumbai">Mumbai</button>
+      <button class="cityBtn" data-city="London">London</button>
+      <button class="cityBtn" data-city="New York">New York</button>
+    </div>
+    <div id="status" class="status">Ready — enter a city and press Search.</div>
+    <main class="grid" aria-live="polite">
+      <div class="card fade" id="cardCondition">
+        <img id="weatherIcon" src="" alt="" aria-hidden="true" style="display: none" />
+        <div id="condition" class="big">--</div>
+        <div class="muted">Condition</div>
+      </div>
+      <div class="card fade">
+        <div id="temp" class="big">-- °F</div>
+        <div class="muted">Temperature</div>
+      </div>
+      <div class="card fade">
+        <div id="humidity" class="big">-- %</div>
+        <div class="muted">Humidity</div>
+      </div>
+      <div class="card fade">
+        <div id="wind" class="big">-- km/h</div>
+        <div class="muted">Wind speed</div>
+      </div>
+    </main>
+    <footer>
+      <div>
+        © <span id="year"></span> Avi-Weather • Built with HTML/CSS/JS
+      </div>
+    </footer>
+  </div>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    document.getElementById("cityInput").focus();
+
+    function setStatus(txt, loading = false) {
+      const status = document.getElementById("status");
+      status.textContent = txt;
+      if (loading) status.classList.add("loading");
+      else status.classList.remove("loading");
+    }
+
+    // A mapping of weather conditions to background image URLs
+    const weatherBackgrounds = {
+      "rain":"image-rain.jpg",
+      "drizzle": "image-cloudy.jpg",
+      "clear":"image-sunny.jpg",
+      "snow": "image-snow.jpg",
+      "clouds": "https://images.unsplash.com/photo-1517685352821-92cf88aee5a5?q=80&w=1939&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "mist": "mist.jpg", 
+      "fog": "fog.jpg",
+      "haze":"mist.jpg",
+      "thunder":"thunder.jpg",
+    };
+
+    async function fetchWeather(cityName) {
+      setStatus("Loading weather…", true);
+      try {
+        const url = `https://open-weather13.p.rapidapi.com/city?city=${encodeURIComponent(cityName)}&lang=EN`;
+        const options = {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-key': '1390096f40mshb6ff5ff9a4cc9a2p119ebbjsn88eab2988448',
+            'x-rapidapi-host': 'open-weather13.p.rapidapi.com'
+          }
+        };
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error("City not found");
+        const data = await response.json();
+
+        document.querySelectorAll('.card').forEach(card => {
+          card.classList.remove('fade');
+          void card.offsetWidth; // animation restart
+          card.classList.add('fade');
+        });
+
+        document.getElementById("condition").textContent = data.weather[0].main || "--";
+        document.getElementById("temp").textContent = Math.round(data.main.temp) + " °F";
+        document.getElementById("humidity").textContent = Math.round(data.main.humidity) + " %";
+        document.getElementById("wind").textContent = Math.round(data.wind.speed * 3.6) + " km/h";
+        const iconCode = data.weather[0].icon;
+        const iconImg = document.getElementById("weatherIcon");
+        if (iconCode) {
+          iconImg.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+          iconImg.alt = data.weather[0].description || data.weather[0].main;
+          iconImg.style.display = "block";
+        } else {
+          iconImg.style.display = "none";
+        }
+
+        // Change background based on weather condition
+        const conditionKey = data.weather[0].main.toLowerCase();
+        const bgUrl = weatherBackgrounds[conditionKey] || "var(--bg-default)";
+        document.body.style.backgroundImage = `url(${bgUrl})`;
+
+        setStatus(`Weather loaded for ${cityName}.`);
+      } catch {
+        setStatus("Unable to load weather. Please check the city name.");
+        document.getElementById("condition").textContent = "--";
+        document.getElementById("temp").textContent = "-- °F";
+        document.getElementById("humidity").textContent = "-- %";
+        document.getElementById("wind").textContent = "-- km/h";
+        document.getElementById("weatherIcon").style.display = "none";
+        document.body.style.backgroundImage = "";
+      }
+    }
+
+    function handleCity(city) {
+      if (city) fetchWeather(city);
+      else setStatus("Please enter a city name above.");
+    }
+    document.getElementById("searchBtn").onclick = function() {
+      handleCity(document.getElementById("cityInput").value.trim());
+    };
+    document.getElementById("cityInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") handleCity(this.value.trim());
+    });
+    document.querySelectorAll(".cityBtn").forEach(btn => {
+      btn.onclick = function() {
+        document.getElementById("cityInput").value = btn.dataset.city;
+        fetchWeather(btn.dataset.city);
+      };
+    });
+    
+  </script>
+</body>
+</html>
