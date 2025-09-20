@@ -23,7 +23,7 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       padding-bottom: 40px;
-      background-image: url( "image-default.jpg")
+      background-image: url( "image-default.webp")
     }
     .wrap { max-width: var(--maxw); margin: 0 auto; padding: 18px; }
     header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
@@ -187,15 +187,15 @@
 
     // A mapping of weather conditions to background image URLs
     const weatherBackgrounds = {
-      "rain":"image-rain.jpg",
-      "drizzle": "image-cloudy.jpg",
-      "clear":"image-sunny.jpg",
-      "snow": "image-snow.jpg",
-      "clouds": "https://images.unsplash.com/photo-1517685352821-92cf88aee5a5?q=80&w=1939&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "mist": "mist.jpg", 
-      "fog": "fog.jpg",
-      "haze":"mist.jpg",
-      "thunder":"thunder.jpg",
+      "rain":"image-rain.webp",
+      "drizzle": "image-cloudy.webp",
+      "clear":"image-sunny.webp",
+      "snow": "image-snow.webp",
+      "clouds": "image-cloudy.webp",
+      "mist": "mist.webp", 
+      "fog": "fog.webp",
+      "haze":"mist.webp",
+      "thunder":"thunder.webp",
     };
 
     async function fetchWeather(cityName) {
